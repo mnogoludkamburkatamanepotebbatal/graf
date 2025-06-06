@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dentist Appointment Scheduler - Dark Theme</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Dark green haze gradient background */
+            background: linear-gradient(to bottom right, #1A2C2A, #283A38); /* Darker, desaturated green gradient */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        /* Custom Tailwind colors for the dark theme with gold font */
+        :root {
+            --color-primary-green: #66BB6A; /* Brighter green for accents */
+            --color-light-green: #2C3E3E; /* Dark background for sections */
+            --color-dark-green: #FFD700; /* Gold text color for primary text */
+            --color-haze-green: #4A7C59; /* Muted green for borders/accents */
+            --color-off-white: #1A202C; /* Very dark background for main container */
+            --color-gray-text: #DAA520; /* Goldenrod for secondary light gray text (placeholders, small notes) */
+            --color-modal-text: #FFD700; /* Gold for modal text */
+            --color-completed-bg: #1F302F; /* Slightly darker background for completed appointments */
+            --color-cancelled-bg: #402020; /* Muted red for cancelled appointments */
+            --color-cancelled-text: #DAA520; /* Goldenrod for cancelled text */
+            --color-active-tab: #4A7C59; /* Color for active navigation tab */
+        }
+        /* Apply custom colors using Tailwind classes */
+        .bg-primary-green { background-color: var(--color-primary-green); }
+        .text-primary-green { color: var(--color-primary-green); }
+        .bg-light-green { background-color: var(--color-light-green); }
+        .text-dark-green { color: var(--color-dark-green); }
+        .border-haze-green { border-color: var(--color-haze-green); }
+        .bg-haze-green { background-color: var(--color-haze-green); }
+        .text-gray-text { color: var(--color-gray-text); }
+        .bg-off-white { background-color: var(--color-off-white); } /* Renamed for clarity in dark mode */
+        .bg-completed { background-color: var(--color-completed-bg); }
+        .bg-cancelled { background-color: var(--color-cancelled-bg); }
+        .text-cancelled { color: var(--color-cancelled-text); }
+        .bg-active-tab { background-color: var(--color-active-tab); }
+
+
+        /* Modal styling for dark theme with gold text */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7); /* Darker overlay */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s, opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .modal-content {
+            background-color: var(--color-off-white); /* Modal background matches main container */
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5); /* Stronger shadow */
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            color: var(--color-modal-text); /* Modal text color is gold */
+        }
+        .modal-content button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: var(--color-primary-green);
+            color: var(--color-off-white); /* Button text color */
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .modal-content button:hover {
+            background-color: var(--color-haze-green); /* Slightly different hover for dark */
+        }
+        /* Selection styling for dark mode */
+        .selection\:bg-primary-green::selection {
+            background-color: var(--color-primary-green);
+        }
+        .selection\:text-white::selection {
+            color: white;
+        }
+        /* Styling for the navigation tabs */
+        .nav-button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            background-color: var(--color-light-green);
+            color: var(--color-gray-text);
+        }
+        .nav-button.active {
+            background-color: var(--color-active-tab);
+            color: var(--color-dark-green);
+        }
+        .nav-button:hover:not(.active) {
+            background-color: var(--color-haze-green);
+        }
+
+        /* Specific styles for the daily appointment cards in the grid */
+        .day-card {
+            background-color: var(--color-light-green);
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+        .day-card-header {
+            font-weight: 600;
+            font-size: 1.25rem;
+            color: var(--color-dark-green);
+            margin-bottom: 0.75rem;
+            text-align: center;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--color-haze-green);
+        }
+        .appointment-item {
+            background-color: var(--color-off-white); /* Inner background for appointments */
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            flex-col;
+            justify-between;
+            align-items: flex-start;
+            gap: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .appointment-item:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body class="selection:bg-primary-green selection:text-white">
+
+    <!-- Main Application Container -->
+    <div class="relative w-full max-w-4xl bg-off-white rounded-xl shadow-2xl p-6 md:p-10 flex flex-col gap-8 transform transition-all duration-300 ease-in-out scale-100 hover:scale-[1.01]">
+        <!-- User ID Display -->
+        <div id="userIdDisplay" class="absolute top-4 right-4 text-xs md:text-sm text-gray-text bg-light-green px-3 py-1 rounded-full shadow-inner opacity-80 z-10">
+            User ID: Loading...
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="flex justify-center gap-4 mb-6">
+            <button id="showAppointmentsBtn" class="nav-button active">Appointments</button>
+            <button id="showPatientsBtn" class="nav-button">Patient Database</button>
+        </div>
+
+        <!-- Appointments Section -->
+        <div id="appointmentsSection" class="content-section flex flex-col lg:flex-row gap-8 lg:gap-12">
+            <!-- Appointment Form Section -->
+            <div class="lg:w-1/3 p-4 bg-light-green rounded-lg shadow-inner flex flex-col justify-between">
+                <h2 class="text-2xl font-bold text-dark-green mb-6 text-center">Schedule New Appointment</h2>
+                <form id="appointmentForm" class="space-y-4">
+                    <div>
+                        <label for="patientName" class="block text-gray-text text-sm font-medium mb-2">Patient Name:</label>
+                        <input type="text" id="patientName" required
+                               class="w-full p-3 border border-haze-green rounded-lg focus:ring-2 focus:ring-haze-green focus:border-transparent text-dark-green placeholder-gray-text bg-transparent">
+                    </div>
+                    <div>
+                        <label for="appointmentDate" class="block text-gray-text text-sm font-medium mb-2">Date:</label>
+                        <input type="date" id="appointmentDate" required
+                               class="w-full p-3 border border-haze-green rounded-lg focus:ring-2 focus:ring-haze-green focus:border-transparent text-dark-green bg-transparent">
+                    </div>
+                    <div>
+                        <label for="appointmentTime" class="block text-gray-text text-sm font-medium mb-2">Time:</label>
+                        <input type="time" id="appointmentTime" required
+                               class="w-full p-3 border border-haze-green rounded-lg focus:ring-2 focus:ring-haze-green focus:border-transparent text-dark-green bg-transparent">
+                    </div>
+                    <div>
+                        <label for="appointmentNotes" class="block text-gray-text text-sm font-medium mb-2">Notes (Optional):</label>
+                        <textarea id="appointmentNotes" rows="3"
+                                  class="w-full p-3 border border-haze-green rounded-lg focus:ring-2 focus:ring-haze-green focus:border-transparent text-dark-green placeholder-gray-text bg-transparent"></textarea>
+                    </div>
+                    <button type="submit"
+                            class="w-full bg-primary-green text-white p-3 rounded-lg shadow-md hover:bg-haze-green focus:outline-none focus:ring-2 focus:ring-haze-green focus:ring-offset-2 transition duration-200 ease-in-out">
+                        Add Appointment
+                    </button>
+                </form>
+            </div>
+
+            <!-- Appointments List/Grid Section -->
+            <div class="lg:w-2/3 p-4 bg-off-white rounded-lg shadow-inner">
+                <h2 class="text-2xl font-bold text-dark-green mb-6 text-center">Upcoming Appointments</h2>
+                <div id="appointmentsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-h-[60vh] overflow-y-auto pr-2">
+                    <!-- Appointments will be loaded here in a grid by day -->
+                    <p class="text-center text-gray-text italic col-span-full" id="loadingMessageAppointments">Loading appointments...</p>
+                    <p class="text-center text-gray-text italic hidden col-span-full" id="noAppointmentsMessage">No appointments scheduled yet.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Patient Database Section (Initially hidden) -->
+        <div id="patientsSection" class="content-section hidden flex flex-col lg:flex-row gap-8 lg:gap-12">
+            <!-- Patient Form Section -->
+            <div class="lg:w-1/3 p-4 bg-light-green rounded-lg shadow-inner flex flex-col justify-between">
+                <h2 class="text-2xl font-bold text-dark-green mb-6 text-center">Add/Edit Patient</h2>
+                <form id="patientForm" class="space-y-4">
+                    <input type="hidden" id="patientId"> <!-- Hidden input for editing existing patients -->
+                    <div>
+                        <label for="patientDbName" class="block text-gray-text text-sm font-medium mb-2">Patient Name:</label>
+                        <input type="text" id="patientDbName" required
+                               class="w-full p-3 border border-haze-green rounded-lg focus:ring-2 focus:ring-haze-green focus:border-transparent text-dark-green placeholder-gray-text bg-transparent">
+                    </div>
+                    <div>
+                        <label for="patientPhone" class="block text-gray-text text-sm font-medium mb-2">Phone:</label>
+                        <input type="tel" id="patientPhone"
+                               class="w-full p-3 border border-haze-green rounded-lg focus:ring-2 focus:ring-haze-green focus:border-transparent text-dark-green placeholder-gray-text bg-transparent">
+                    </div>
+                    <div>
+                        <label for="patientEmail" class="block text-gray-text text-sm font-medium mb-2">Email:</label>
+                        <input type="email" id="patientEmail"
+                               class="w-full p-3 border border-haze-green rounded-lg focus:ring-2 focus:ring-haze-green focus:border-transparent text-dark-green placeholder-gray-text bg-transparent">
+                    </div>
+                    <div>
+                        <label for="patientDOB" class="block text-gray-text text-sm font-medium mb-2">Date of Birth:</label>
+                        <input type="date" id="patientDOB"
+                               class="w-full p-3 border border-haze-green rounded-lg focus:ring-2 focus:ring-haze-green focus:border-transparent text-dark-green bg-transparent">
+                    </div>
+                    <div>
+                        <label for="patientAddress" class="block text-gray-text text-sm font-medium mb-2">Address (Optional):</label>
+                        <textarea id="patientAddress" rows="2"
+                                  class="w-full p-3 border border-haze-green rounded-lg focus:ring-2 focus:ring-haze-green focus:border-transparent text-dark-green placeholder-gray-text bg-transparent"></textarea>
+                    </div>
+                    <div>
+                        <label for="patientMedicalNotes" class="block text-gray-text text-sm font-medium mb-2">Medical Notes (Optional):</label>
+                        <textarea id="patientMedicalNotes" rows="4"
+                                  class="w-full p-3 border border-haze-green rounded-lg focus:ring-2 focus:ring-haze-green focus:border-transparent text-dark-green placeholder-gray-text bg-transparent"></textarea>
+                    </div>
+                    <button type="submit"
+                            class="w-full bg-primary-green text-white p-3 rounded-lg shadow-md hover:bg-haze-green focus:outline-none focus:ring-2 focus:ring-haze-green focus:ring-offset-2 transition duration-200 ease-in-out">
+                        Save Patient
+                    </button>
+                    <button type="button" id="clearPatientFormBtn"
+                            class="w-full bg-gray-600 text-white p-3 rounded-lg shadow-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 transition duration-200 ease-in-out">
+                        Clear Form
+                    </button>
+                </form>
+            </div>
+
+            <!-- Patients List Section -->
+            <div class="lg:w-2/3 p-4 bg-off-white rounded-lg shadow-inner">
+                <h2 class="text-2xl font-bold text-dark-green mb-6 text-center">Registered Patients</h2>
+                <div id="patientsList" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                    <!-- Patients will be loaded here -->
+                    <p class="text-center text-gray-text italic" id="loadingMessagePatients">Loading patients...</p>
+                    <p class="text-center text-gray-text italic hidden" id="noPatientsMessage">No patients registered yet.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Modal for Alerts/Confirmations -->
+    <div id="customModal" class="modal-overlay">
+        <div class="modal-content">
+            <p id="modalMessage" class="text-dark-green text-lg"></p>
+            <button id="modalCloseButton">OK</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Added where, getDocs
+
+        // Global variables for Firebase instances
+        let app;
+        let db;
+        let auth;
+        let userId = null;
+        let isAuthReady = false;
+
+        // Custom Modal functions (replace alert/confirm)
+        function showModal(message) {
+            document.getElementById('modalMessage').textContent = message;
+            document.getElementById('customModal').classList.add('active');
+        }
+
+        document.getElementById('modalCloseButton').addEventListener('click', () => {
+            document.getElementById('customModal').classList.remove('active');
+        });
+
+        // Initialize Firebase
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-dentist-app';
+
+        if (Object.keys(firebaseConfig).length > 0) {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+
+            // Listen for authentication state changes
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    userId = user.uid;
+                    document.getElementById('userIdDisplay').textContent = `User ID: ${userId}`;
+                    isAuthReady = true;
+                    console.log("Firebase initialized and user authenticated:", userId);
+                    // Initial load defaults to appointments
+                    showSection('appointmentsSection');
+                    setupRealtimeAppointmentsListener();
+                    setupRealtimePatientsListener(); // Also set up patient listener for background updates
+                } else {
+                    // Sign in anonymously if no user is found
+                    console.log("No user found, attempting anonymous sign-in or using custom token...");
+                    try {
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await signInWithCustomToken(auth, __initial_auth_token);
+                            console.log("Signed in with custom token.");
+                        } else {
+                            await signInAnonymously(auth);
+                            console.log("Signed in anonymously.");
+                        }
+                    } catch (error) {
+                        console.error("Authentication failed:", error);
+                        showModal("Failed to authenticate. Please try again.");
+                    }
+                }
+            });
+        } else {
+            showModal("Firebase configuration missing. Cannot connect to database.");
+            console.error("Firebase config is missing!");
+        }
+
+        // --- DOM Elements ---
+        const showAppointmentsBtn = document.getElementById('showAppointmentsBtn');
+        const showPatientsBtn = document.getElementById('showPatientsBtn');
+        const appointmentsSection = document.getElementById('appointmentsSection');
+        const patientsSection = document.getElementById('patientsSection');
+
+        const appointmentForm = document.getElementById('appointmentForm');
+        const appointmentsGrid = document.getElementById('appointmentsGrid'); // Changed from appointmentsList
+        const loadingMessageAppointments = document.getElementById('loadingMessageAppointments');
+        const noAppointmentsMessage = document.getElementById('noAppointmentsMessage');
+
+        const patientForm = document.getElementById('patientForm');
+        const patientsList = document.getElementById('patientsList');
+        const loadingMessagePatients = document.getElementById('loadingMessagePatients');
+        const noPatientsMessage = document.getElementById('noPatientsMessage');
+        const clearPatientFormBtn = document.getElementById('clearPatientFormBtn');
+
+        // --- Navigation Logic ---
+        function showSection(sectionId) {
+            appointmentsSection.classList.add('hidden');
+            patientsSection.classList.add('hidden');
+            showAppointmentsBtn.classList.remove('active');
+            showPatientsBtn.classList.remove('active');
+
+            if (sectionId === 'appointmentsSection') {
+                appointmentsSection.classList.remove('hidden');
+                showAppointmentsBtn.classList.add('active');
+            } else if (sectionId === 'patientsSection') {
+                patientsSection.classList.remove('hidden');
+                showPatientsBtn.classList.add('active');
+            }
+        }
+
+        showAppointmentsBtn.addEventListener('click', () => showSection('appointmentsSection'));
+        showPatientsBtn.addEventListener('click', () => showSection('patientsSection'));
+
+        // --- Appointment Functions ---
+
+        // Function to set up real-time listener for appointments
+        function setupRealtimeAppointmentsListener() {
+            if (!db || !userId || !isAuthReady) {
+                console.warn("Firestore not ready or userId not available for appointments listener.");
+                return;
+            }
+
+            const appointmentsRef = collection(db, `artifacts/${appId}/users/${userId}/appointments`);
+            const q = query(appointmentsRef); // No orderBy to avoid index issues, sort locally
+
+            onSnapshot(q, (snapshot) => {
+                const appointments = [];
+                snapshot.forEach(doc => {
+                    appointments.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Sort appointments by date and time locally
+                appointments.sort((a, b) => {
+                    const dateA = new Date(`${a.appointmentDate}T${a.appointmentTime}`);
+                    const dateB = new Date(`${b.appointmentDate}T${b.appointmentTime}`);
+                    return dateA - dateB;
+                });
+
+                displayAppointments(appointments);
+            }, (error) => {
+                console.error("Error fetching appointments:", error);
+                showModal("Error loading appointments. Please check your connection.");
+            });
+        }
+
+        // Function to display appointments in a grid by day
+        function displayAppointments(appointments) {
+            appointmentsGrid.innerHTML = ''; // Clear existing appointments
+            loadingMessageAppointments.classList.add('hidden'); // Hide loading message
+
+            if (appointments.length === 0) {
+                noAppointmentsMessage.classList.remove('hidden');
+                // Ensure noAppointmentsMessage spans full grid width
+                noAppointmentsMessage.classList.add('col-span-full');
+                appointmentsGrid.appendChild(noAppointmentsMessage);
+                return;
+            } else {
+                noAppointmentsMessage.classList.add('hidden');
+            }
+
+            // Group appointments by date
+            const groupedAppointments = appointments.reduce((acc, appt) => {
+                const date = appt.appointmentDate;
+                if (!acc[date]) {
+                    acc[date] = [];
+                }
+                acc[date].push(appt);
+                return acc;
+            }, {});
+
+            const sortedDates = Object.keys(groupedAppointments).sort();
+
+            sortedDates.forEach(date => {
+                const dayCard = document.createElement('div');
+                dayCard.className = 'day-card'; // Custom class for daily card styling
+
+                const dateHeader = document.createElement('h3');
+                dateHeader.className = 'day-card-header'; // Custom class for header
+                dateHeader.textContent = new Date(date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                dayCard.appendChild(dateHeader);
+
+                groupedAppointments[date].forEach(appt => {
+                    // Determine styling based on status
+                    let appointmentBgClass = 'bg-off-white'; // Inner background for appointments
+                    let appointmentTextClass = 'text-dark-green';
+                    let patientNameClass = 'font-medium text-dark-green text-lg';
+                    let notesClass = 'text-gray-text text-xs italic mt-1';
+                    let statusText = '';
+
+                    if (appt.status === 'completed') {
+                        appointmentBgClass = 'bg-completed';
+                        statusText = '<span class="text-primary-green font-semibold ml-2"> (Completed)</span>';
+                    } else if (appt.status === 'cancelled') {
+                        appointmentBgClass = 'bg-cancelled';
+                        appointmentTextClass = 'text-cancelled line-through opacity-70';
+                        patientNameClass = 'font-medium text-cancelled text-lg line-through opacity-70';
+                        notesClass = 'text-cancelled text-xs italic mt-1 line-through opacity-70';
+                        statusText = '<span class="text-red-400 font-semibold ml-2"> (Cancelled)</span>';
+                    }
+
+                    const apptElement = document.createElement('div');
+                    apptElement.className = `${appointmentBgClass} appointment-item`; // Apply custom item styling
+                    apptElement.innerHTML = `
+                        <div class="flex-grow">
+                            <p class="${patientNameClass}">${appt.patientName}${statusText}</p>
+                            <p class="${appointmentTextClass} text-sm">${appt.appointmentTime}</p>
+                            ${appt.appointmentNotes ? `<p class="${notesClass}">${appt.appointmentNotes}</p>` : ''}
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-2 mt-3 sm:mt-0">
+                            ${appt.status === 'scheduled' ? `
+                                <button data-id="${appt.id}" data-status="completed" class="status-btn bg-primary-green text-white p-2 rounded-full hover:bg-haze-green transition duration-200 ease-in-out" title="Mark as Completed">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                </button>
+                                <button data-id="${appt.id}" data-status="cancelled" class="status-btn bg-red-600 text-white p-2 rounded-full hover:bg-red-800 transition duration-200 ease-in-out" title="Mark as Cancelled">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            ` : ''}
+                            <button data-id="${appt.id}" class="delete-btn bg-primary-green text-white p-2 rounded-full hover:bg-red-600 transition duration-200 ease-in-out" title="Delete Appointment">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m14 0H5m3 0V5a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    `;
+                    dayCard.appendChild(apptElement);
+                });
+                appointmentsGrid.appendChild(dayCard);
+            });
+
+            // Add event listeners for status change and delete buttons
+            appointmentsGrid.querySelectorAll('.status-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const appointmentId = event.currentTarget.dataset.id;
+                    const newStatus = event.currentTarget.dataset.status;
+                    updateAppointmentStatus(appointmentId, newStatus);
+                });
+            });
+
+            appointmentsGrid.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const appointmentId = event.currentTarget.dataset.id;
+                    deleteAppointment(appointmentId);
+                });
+            });
+        }
+
+        // Add Appointment - Modified to auto-add patient
+        appointmentForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!db || !userId) {
+                showModal("Database not ready. Please wait for authentication.");
+                return;
+            }
+
+            const patientName = document.getElementById('patientName').value.trim();
+            const appointmentDate = document.getElementById('appointmentDate').value;
+            const appointmentTime = document.getElementById('appointmentTime').value;
+            const appointmentNotes = document.getElementById('appointmentNotes').value;
+
+            // Check if patient already exists
+            const patientsRef = collection(db, `artifacts/${appId}/users/${userId}/patients`);
+            const q = query(patientsRef, where("patientName", "==", patientName));
+            const querySnapshot = await getDocs(q);
+
+            if (querySnapshot.empty) {
+                // Patient does not exist, add them to the database
+                try {
+                    await addDoc(patientsRef, {
+                        patientName: patientName,
+                        createdAt: new Date()
+                    });
+                    console.log(`Patient '${patientName}' automatically added to database.`);
+                } catch (error) {
+                    console.error("Error automatically adding patient: ", error);
+                    showModal("Error auto-adding patient to database. Please check console.");
+                }
+            } else {
+                console.log(`Patient '${patientName}' already exists in database.`);
+            }
+
+            // Now add the appointment
+            try {
+                await addDoc(collection(db, `artifacts/${appId}/users/${userId}/appointments`), {
+                    patientName,
+                    appointmentDate,
+                    appointmentTime,
+                    appointmentNotes,
+                    status: 'scheduled', // Default status for new appointments
+                    createdAt: new Date() // Add a timestamp
+                });
+                appointmentForm.reset();
+                showModal("Appointment added successfully!");
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                showModal("Error adding appointment. Please try again.");
+            }
+        });
+
+        // Update Appointment Status
+        async function updateAppointmentStatus(id, newStatus) {
+            if (!db || !userId) {
+                showModal("Database not ready. Please wait for authentication.");
+                return;
+            }
+
+            try {
+                const appointmentDocRef = doc(db, `artifacts/${appId}/users/${userId}/appointments`, id);
+                await updateDoc(appointmentDocRef, {
+                    status: newStatus
+                });
+                showModal(`Appointment marked as ${newStatus}.`);
+            } catch (e) {
+                console.error(`Error updating appointment status to ${newStatus}: `, e);
+                showModal(`Error marking appointment as ${newStatus}. Please try again.`);
+            }
+        }
+
+        // Delete Appointment
+        async function deleteAppointment(id) {
+            if (!db || !userId) {
+                showModal("Database not ready. Please wait for authentication.");
+                return;
+            }
+
+            try {
+                await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/appointments`, id));
+                showModal("Appointment deleted.");
+            } catch (e) {
+                console.error("Error deleting document: ", e);
+                showModal("Error deleting appointment. Please try again.");
+            }
+        }
+
+        // --- Patient Database Functions ---
+
+        // Function to set up real-time listener for patients
+        function setupRealtimePatientsListener() {
+            if (!db || !userId || !isAuthReady) {
+                console.warn("Firestore not ready or userId not available for patients listener.");
+                return;
+            }
+
+            const patientsRef = collection(db, `artifacts/${appId}/users/${userId}/patients`);
+            const q = query(patientsRef); // No orderBy to avoid index issues, sort locally
+
+            onSnapshot(q, (snapshot) => {
+                const patients = [];
+                snapshot.forEach(doc => {
+                    patients.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Sort patients by name locally
+                patients.sort((a, b) => a.patientName.localeCompare(b.patientName));
+
+                displayPatients(patients);
+            }, (error) => {
+                console.error("Error fetching patients:", error);
+                showModal("Error loading patients. Please check your connection.");
+            });
+        }
+
+        // Function to display patients
+        function displayPatients(patients) {
+            patientsList.innerHTML = ''; // Clear existing patients
+            loadingMessagePatients.classList.add('hidden'); // Hide loading message
+
+            if (patients.length === 0) {
+                noPatientsMessage.classList.remove('hidden');
+                return;
+            } else {
+                noPatientsMessage.classList.add('hidden');
+            }
+
+            patients.forEach(patient => {
+                const patientElement = document.createElement('div');
+                patientElement.className = 'bg-light-green p-4 rounded-lg shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3';
+                patientElement.innerHTML = `
+                    <div class="flex-grow">
+                        <p class="font-medium text-dark-green text-lg">${patient.patientName}</p>
+                        ${patient.contactPhone ? `<p class="text-gray-text text-sm">Phone: ${patient.contactPhone}</p>` : ''}
+                        ${patient.contactEmail ? `<p class="text-gray-text text-sm">Email: ${patient.contactEmail}</p>` : ''}
+                        ${patient.dateOfBirth ? `<p class="text-gray-text text-sm">DOB: ${patient.dateOfBirth}</p>` : ''}
+                        ${patient.address ? `<p class="text-gray-text text-xs italic mt-1">Address: ${patient.address}</p>` : ''}
+                        ${patient.medicalNotes ? `<p class="text-gray-text text-xs italic mt-1">Notes: ${patient.medicalNotes}</p>` : ''}
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-2 mt-3 sm:mt-0">
+                        <button data-id="${patient.id}" class="edit-patient-btn bg-primary-green text-white p-2 rounded-full hover:bg-haze-green transition duration-200 ease-in-out" title="Edit Patient">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-7-9l4 4L17 7l-4-4zm-7 7l-4 4"></path>
+                            </svg>
+                        </button>
+                        <button data-id="${patient.id}" class="delete-patient-btn bg-red-600 text-white p-2 rounded-full hover:bg-red-800 transition duration-200 ease-in-out" title="Delete Patient">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m14 0H5m3 0V5a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                patientsList.appendChild(patientElement);
+            });
+
+            // Add event listeners for patient edit and delete buttons
+            patientsList.querySelectorAll('.edit-patient-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const patientId = event.currentTarget.dataset.id;
+                    editPatient(patientId);
+                });
+            });
+            patientsList.querySelectorAll('.delete-patient-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const patientId = event.currentTarget.dataset.id;
+                    deletePatient(patientId);
+                });
+            });
+        }
+
+        // Add/Update Patient
+        patientForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!db || !userId) {
+                showModal("Database not ready. Please wait for authentication.");
+                return;
+            }
+
+            const patientId = document.getElementById('patientId').value;
+            const patientName = document.getElementById('patientDbName').value;
+            const contactPhone = document.getElementById('patientPhone').value;
+            const contactEmail = document.getElementById('patientEmail').value;
+            const dateOfBirth = document.getElementById('patientDOB').value;
+            const address = document.getElementById('patientAddress').value;
+            const medicalNotes = document.getElementById('patientMedicalNotes').value;
+
+            const patientData = {
+                patientName,
+                contactPhone,
+                contactEmail,
+                dateOfBirth,
+                address,
+                medicalNotes
+            };
+
+            try {
+                if (patientId) {
+                    // Update existing patient
+                    const patientDocRef = doc(db, `artifacts/${appId}/users/${userId}/patients`, patientId);
+                    await updateDoc(patientDocRef, patientData);
+                    showModal("Patient updated successfully!");
+                } else {
+                    // Add new patient
+                    patientData.createdAt = new Date(); // Add timestamp for new patients
+                    await addDoc(collection(db, `artifacts/${appId}/users/${userId}/patients`), patientData);
+                    showModal("Patient added successfully!");
+                }
+                patientForm.reset();
+                document.getElementById('patientId').value = ''; // Clear hidden ID after save
+                clearPatientFormBtn.textContent = 'Clear Form'; // Reset button text
+            } catch (e) {
+                console.error("Error saving patient: ", e);
+                showModal("Error saving patient. Please try again.");
+            }
+        });
+
+        // Edit Patient: populate form
+        async function editPatient(id) {
+            if (!db || !userId) {
+                showModal("Database not ready. Please wait for authentication.");
+                return;
+            }
+
+            try {
+                const patientDocRef = doc(db, `artifacts/${appId}/users/${userId}/patients`, id);
+                const docSnap = await getDoc(patientDocRef);
+
+                if (docSnap.exists()) {
+                    const patientData = docSnap.data();
+                    document.getElementById('patientId').value = docSnap.id;
+                    document.getElementById('patientDbName').value = patientData.patientName || '';
+                    document.getElementById('patientPhone').value = patientData.contactPhone || '';
+                    document.getElementById('patientEmail').value = patientData.contactEmail || '';
+                    document.getElementById('patientDOB').value = patientData.dateOfBirth || '';
+                    document.getElementById('patientAddress').value = patientData.address || '';
+                    document.getElementById('patientMedicalNotes').value = patientData.medicalNotes || '';
+
+                    // Change button text to indicate editing
+                    patientForm.querySelector('button[type="submit"]').textContent = 'Update Patient';
+                    clearPatientFormBtn.textContent = 'Cancel Edit';
+                    showModal("Patient data loaded for editing.");
+                    showSection('patientsSection'); // Ensure patient section is visible
+                } else {
+                    showModal("Patient not found.");
+                }
+            } catch (e) {
+                console.error("Error editing patient: ", e);
+                showModal("Error loading patient for edit.");
+            }
+        }
+
+        // Clear Patient Form
+        clearPatientFormBtn.addEventListener('click', () => {
+            patientForm.reset();
+            document.getElementById('patientId').value = ''; // Clear hidden ID
+            patientForm.querySelector('button[type="submit"]').textContent = 'Save Patient'; // Reset button text
+            clearPatientFormBtn.textContent = 'Clear Form'; // Reset button text
+        });
+
+        // Delete Patient
+        async function deletePatient(id) {
+            if (!db || !userId) {
+                showModal("Database not ready. Please wait for authentication.");
+                return;
+            }
+
+            try {
+                await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/patients`, id));
+                showModal("Patient deleted.");
+                clearPatientFormBtn.click(); // Clear form if current patient is deleted
+            } catch (e) {
+                console.error("Error deleting patient: ", e);
+                showModal("Error deleting patient. Please try again.");
+            }
+        }
+
+        // Import getDoc for editPatient function
+        import { getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    </script>
+</body>
+</html>
